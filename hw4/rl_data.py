@@ -39,7 +39,10 @@ class Episode(object):
         #  Try to implement it in O(n) runtime, where n is the number of
         #  states. Hint: change the order.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        qvals.append(self.experiences[-1].reward)
+        for exp in reversed(self.experiences[:-1]):
+            qvals.append(exp.reward + (gamma * qvals[-1]))
+        qvals.reverse()
         # ========================
         return qvals
 
@@ -147,7 +150,17 @@ class TrainBatchDataset(torch.utils.data.IterableDataset):
             #    by the agent.
             #  - Store Episodes in the curr_batch list.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            is_done = False
+            episode_reward = 0.0
+            episode_experiences = []
+            while not is_done:
+                exp = agent.step()
+                episode_reward += exp.reward
+                episode_experiences += [exp]
+                is_done = exp.is_done
+
+            episode = Episode(episode_reward, episode_experiences)
+            curr_batch.append(episode)
             # ========================
             if len(curr_batch) == self.episode_batch_size:
                 yield tuple(curr_batch)
