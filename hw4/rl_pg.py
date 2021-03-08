@@ -32,7 +32,6 @@ class PolicyNet(nn.Module):
         self.layers = [torch.nn.Linear(in_features, self.dims[0]), torch.nn.ReLU()]
         for in_, out_ in zip(self.dims, self.dims[1::]):
             self.layers += [torch.nn.Linear(in_, out_)]
-
         # ========================
 
     def forward(self, x):
@@ -178,7 +177,8 @@ class VanillaPolicyGradientLoss(nn.Module):
         #  Use the helper methods in this class to first calculate the weights
         #  and then the loss using the weights and action scores.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        N = len(batch)
+        loss_p = - self._policy_loss(batch, action_scores, self._policy_weight(batch)) / N
         # ========================
         return loss_p, dict(loss_p=loss_p.item())
 
@@ -187,7 +187,7 @@ class VanillaPolicyGradientLoss(nn.Module):
         #  Return the policy weight term for the causal vanilla PG loss.
         #  This is a tensor of shape (N,).
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        policy_weight = batch.q_vals
         # ========================
         return policy_weight
 
@@ -202,7 +202,9 @@ class VanillaPolicyGradientLoss(nn.Module):
         #   different episodes. So, here we'll simply average over the number
         #   of total experiences in our batch.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        log_proba = torch.log_softmax(action_scores, dim=1)
+        taken_actions = log_proba[torch.arange(log_proba.shape[0]), batch.actions]
+        loss_p = torch.dot(policy_weight, taken_actions)
         # ========================
         return loss_p
 
@@ -220,7 +222,9 @@ class BaselinePolicyGradientLoss(VanillaPolicyGradientLoss):
         #  Calculate the loss and baseline.
         #  Use the helper methods in this class as before.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        N = len(batch)
+        weights, baseline = self._policy_weight(batch)
+        loss_p = - self._policy_loss(batch, action_scores, weights) / N
         # ========================
         return loss_p, dict(loss_p=loss_p.item(), baseline=baseline.item())
 
@@ -229,7 +233,7 @@ class BaselinePolicyGradientLoss(VanillaPolicyGradientLoss):
         #  Calculate both the policy weight term and the baseline value for
         #  the PG loss with baseline.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        policy_weight, baseline = batch.q_vals - torch.mean(batch.q_vals), torch.mean(batch.q_vals)
         # ========================
         return policy_weight, baseline
 
