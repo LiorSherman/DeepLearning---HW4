@@ -15,8 +15,9 @@ def part1_pg_hyperparams():
     #  You can also add new ones if you need them for your model's __init__.
     # ====== YOUR CODE: ======
     hp = dict(
-        batch_size=32, gamma=0.99, beta=0.5, learn_rate=1e-3, eps=1e-8, num_workers=2,
+        batch_size=32, gamma=0.99, beta=0.5, learn_rate=1e-3, eps=1e-8, dims=[64, 128, 128, 256, 128, 64], num_workers=0 #2
     )
+
     # ========================
     return hp
 
