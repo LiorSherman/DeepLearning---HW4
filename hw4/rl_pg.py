@@ -28,18 +28,19 @@ class PolicyNet(nn.Module):
 
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        self.dims = [64, 128, 128, out_actions]
-        self.layers = [torch.nn.Linear(in_features, self.dims[0]), torch.nn.ReLU()]
+        self.dims = [in_features, 64, 128, 128, out_actions]
+        self.layers = []
+        self.relu = torch.nn.ReLU()
         for in_, out_ in zip(self.dims, self.dims[1::]):
             self.layers += [torch.nn.Linear(in_, out_)]
+            self.layers += [self.relu]
+        self.net = torch.nn.Sequential(*self.layers)
         # ========================
 
     def forward(self, x):
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        action_scores = x
-        for layer in self.layers:
-            action_scores = layer.forward(action_scores)
+        action_scores = self.net(x)
         # ========================
         return action_scores
 
