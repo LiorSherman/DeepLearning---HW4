@@ -435,17 +435,6 @@ class PolicyTrainer(object):
         #   - Backprop.
         #   - Update model parameters.
         # ====== YOUR CODE: ======
-        # self.model.train()
-        # act_scores = self.model(batch.states)
-        # total_loss = 0
-        # for loss_f in self.loss_functions:
-        #     loss, dict_loss = loss_f(batch, act_scores)
-        #     total_loss += loss
-        #     losses_dict.update(dict_loss)
-        #
-        # self.optimizer.zero_grad()
-        # total_loss.backward()
-        # self.optimizer.step()
         self.model.train()
         total_loss = 0
         action_scores = self.model(batch.states)
@@ -458,7 +447,6 @@ class PolicyTrainer(object):
         self.optimizer.zero_grad()
         total_loss.backward()
         self.optimizer.step()
-
         # ========================
 
         return total_loss, losses_dict
