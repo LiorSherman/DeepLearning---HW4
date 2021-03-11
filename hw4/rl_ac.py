@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional
 
-from .rl_pg import TrainBatch, PolicyAgent, VanillaPolicyGradientLoss
+from .rl_pg import TrainBatch, PolicyAgent, VanillaPolicyGradientLoss, PolicyNet
 
 
 class AACPolicyNet(nn.Module):
@@ -19,7 +19,8 @@ class AACPolicyNet(nn.Module):
         #  Implement a dual-head neural net to approximate both the
         #  policy and value. You can have a common base part, or not.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.policy = PolicyNet(in_features, out_actions, **kw)
+        self.state_out = torch.nn.Linear(out_actions, 1)
         # ========================
 
     def forward(self, x):
@@ -34,7 +35,9 @@ class AACPolicyNet(nn.Module):
         #  calculate both the action scores (policy) and the value of the
         #  given state.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        action_scores = x
+        action_scores = self.policy(action_scores)
+        state_values = self.state_out(action_scores)
         # ========================
 
         return action_scores, state_values
@@ -49,7 +52,7 @@ class AACPolicyNet(nn.Module):
         """
         # TODO: Implement according to docstring.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        net = AACPolicyNet(in_features=env.observation_space.shape[0], out_actions=env.action_space.n, **kw)
         # ========================
         return net.to(device)
 
@@ -58,7 +61,7 @@ class AACPolicyAgent(PolicyAgent):
     def current_action_distribution(self) -> torch.Tensor:
         # TODO: Generate the distribution as described above.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        actions_proba = super(AACPolicyAgent, self).current_action_distribution()
         # ========================
         return actions_proba
 
