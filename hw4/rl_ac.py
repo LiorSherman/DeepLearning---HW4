@@ -19,21 +19,21 @@ class AACPolicyNet(nn.Module):
         #  Implement a dual-head neural net to approximate both the
         #  policy and value. You can have a common base part, or not.
         # ====== YOUR CODE: ======
-        self.fc1_actor = nn.Linear(in_features, 256)
-        self.relu_1_actor = nn.ReLU()
-        self.fc2_actor = nn.Linear(256, 128)
-        self.relu_2_actor = nn.ReLU()
-        self.fc3_actor = nn.Linear(128, out_actions)
-        # self.relu_3_actor = nn.ReLU()
-        # self.fc4_actor = nn.Linear(64,out_actions)
+        actor_dims = [in_features, 256, 128, out_actions]
+        critic_dims = [in_features, 128, 64, 1]
+        self.relu = torch.nn.ReLU()
+        actor_layers = []
+        critic_layers = []
 
-        self.fc1_critic = nn.Linear(in_features, 128)
-        self.relu_1_critic = nn.ReLU()
-        self.fc2_critic = nn.Linear(128, 64)
-        self.relu_2_critic = nn.ReLU()
-        self.fc3_critic = nn.Linear(64, 1)
-        # self.relu_3_critic = nn.ReLU()
-        # self.fc4_critic = nn.Linear(out_actions,1)
+        for in_, out_ in zip(actor_dims, actor_dims[1:]):
+            actor_layers += [torch.nn.Linear(in_, out_)]
+            actor_layers += [self.relu]
+        self.actor_net = torch.nn.Sequential(*actor_layers[:-1])
+
+        for in_, out_ in zip(critic_dims, critic_dims[1:]):
+            critic_layers += [torch.nn.Linear(in_, out_)]
+            critic_layers += [self.relu]
+        self.critic_net = torch.nn.Sequential(*critic_layers[:-1])
         # ========================
 
     def forward(self, x):
@@ -48,21 +48,8 @@ class AACPolicyNet(nn.Module):
         #  calculate both the action scores (policy) and the value of the
         #  given state.
         # ====== YOUR CODE: ======
-        # separate base
-        # actor network
-        action_scores = self.fc1_actor(x)
-        action_scores = self.relu_1_actor(action_scores)
-        action_scores = self.fc2_actor(action_scores)
-        action_scores = self.relu_2_actor(action_scores)
-        action_scores = self.fc3_actor(action_scores)
-
-        # critic network
-        state_values = self.fc1_critic(x)
-        state_values = self.relu_1_critic(state_values)
-        state_values = self.fc2_critic(state_values)
-        state_values = self.relu_2_critic(state_values)
-        state_values = self.fc3_critic(state_values)
-
+        action_scores = self.actor_net(x)
+        state_values = self.critic_net(x)
         # ========================
 
         return action_scores, state_values
@@ -112,10 +99,10 @@ class AACPolicyGradientLoss(VanillaPolicyGradientLoss):
         #  advantage vector per state.
         #  Use the helper functions in this class and its base.
         # ====== YOUR CODE: ======
+        N = len(batch)
         loss_v = self._value_loss(batch, state_values)
         advantage = self._policy_weight(batch, state_values)
-
-        loss_p = (-1/len(batch)) * self._policy_loss(batch, action_scores, advantage)
+        loss_p = - self._policy_loss(batch, action_scores, advantage) / N
         # ========================
 
         loss_v *= self.delta
@@ -137,6 +124,7 @@ class AACPolicyGradientLoss(VanillaPolicyGradientLoss):
     def _value_loss(self, batch: TrainBatch, state_values: torch.Tensor):
         # TODO: Calculate the state-value loss.
         # ====== YOUR CODE: ======
-        loss_v = (1/len(batch)) * torch.sum((batch.q_vals - state_values.transpose(1, 0))**2)
+        N = len(batch)
+        loss_v = torch.sum((batch.q_vals - state_values.transpose(1, 0))**2) / N
         # ========================
         return loss_v

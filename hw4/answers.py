@@ -33,7 +33,7 @@ def part1_aac_hyperparams():
         delta=1,
         learn_rate=1e-3,
         eps=1e-8,
-        num_workers=0,
+        num_workers=2,
     )
     # ========================
     return hp
