@@ -27,13 +27,13 @@ def part1_aac_hyperparams():
     #   them for your model implementation.
     # ====== YOUR CODE: ======
     hp = dict(
-        batch_size=32,
-        gamma=0.99,
-        beta=1.0,
-        delta=1.0,
+        batch_size=16,
+        gamma=0.97,
+        beta=1,
+        delta=1,
         learn_rate=1e-3,
         eps=1e-8,
-        num_workers=2,
+        num_workers=0,
     )
     # ========================
     return hp
