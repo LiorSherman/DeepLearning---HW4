@@ -19,8 +19,8 @@ class AACPolicyNet(nn.Module):
         #  Implement a dual-head neural net to approximate both the
         #  policy and value. You can have a common base part, or not.
         # ====== YOUR CODE: ======
-        actor_dims = [in_features, 256, 128, out_actions]
-        critic_dims = [in_features, 128, 64, 1]
+        actor_dims = [in_features, 512, 128, out_actions]
+        critic_dims = [in_features, 256, 64, 1]
         self.relu = torch.nn.ReLU()
         actor_layers = []
         critic_layers = []

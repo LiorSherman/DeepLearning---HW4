@@ -34,7 +34,7 @@ class PolicyNet(nn.Module):
         for in_, out_ in zip(self.dims, self.dims[1::]):
             self.layers += [torch.nn.Linear(in_, out_)]
             self.layers += [self.relu]
-        self.net = torch.nn.Sequential(*self.layers)
+        self.net = torch.nn.Sequential(*self.layers[:-1])
         # ========================
 
     def forward(self, x):
