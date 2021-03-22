@@ -64,20 +64,25 @@ constant number. In the example above, subtracting a baseline will cause the gra
 
 
 part1_q2 = r"""
-$v_\pi(s)$ = $max_aq_\pi(s,a)$ - The value function is the upper bound on the q-values from current state so it is a 
-valid approximation of "how far" is the reward from the mean reward value function from the state.
+Using the estimated q-values as regression targets for our state-values gets us a valid approximation because of how 
+$v_\pi(s)$ is expressed in terms of $max_aq_\pi(s,a)$ like the hint says.
+As we can recall $v_\pi(s)$ = $max_aq_\pi(s,a)$ so we can see that the value function is the maximum of the q-values of
+a specific state therefore it is a good approximation of the distance between the reward and the mean reward value
+function of the state.
 """
 
 
 part1_q3 = r"""
-1. In the results from the first part we can see that for the reward vpg < bpg < epg < cpg, so the highest result that
-we got was for the model that used both baseline and entropy losses which is what we expected - the loss takes into 
-account both baseline that reduces variance and entropy which encourages exploration in the moves that the agent takes.
-The lowest reward we got was for the vanilla model as we expected since its loss function is not as good as the other 
-ones. We can also see that the reward for bpg < epg so it seems that the entropy is important, but the gap is not so
-big so it is not significant.
-2. In the results from the second part we can see that the aac model got the best results - it used both entropy loss
-and a value function approximator network which lead to better performance. The policy model in this part was simpler - 
-it had only 2 hidden layers instead of 3 as in other models and it also has fewer parameters and still the results are 
-better and that indicates that the "smart" baseline that is approximated by the v_net boosts the total reward.
+1.  The first experiment's results confirm our thoughts of the loss functions.
+The best one is the CPG model which utilizes the baseline subtraction that reduces variance and entropy which gave
+the agent more freedom to choose moves.
+The worst one is the VPG which utilizes none of the above.
+The BPG and EPG models are better than the vanilla, each one of them utilizes
+one of the improvements and their results are close.
+However, we can see from the rewards graph that BPG < EPG but they are close
+so we conclude that the difference between them is not that important.
+
+2.  The second experiment's results also confirm our thought of the AAC.
+The AAC performs better than the cpg as it used the entropy loss and the advantage function which gave that model the
+ability to perform better.
 """
