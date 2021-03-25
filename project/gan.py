@@ -306,11 +306,11 @@ def create_optimizer(model_params, opt_params):
     return optim.__dict__[optimizer_type](model_params, **opt_params)
 
 
-def inception_score(gen, cuda=True, batch_size=32, resize=False, splits=1):
+def inception_score(gen, cuda=True, batch_size=32, resize=False, splits=1, len=50000):
     """ Calculates inception score for a generator. Adapted from https://github.com/sbarratt/inception-score-pytorch
     """
     # N = len(imgs)
-    N = 50000
+    N = len
 
     assert batch_size > 0
     assert N > batch_size
