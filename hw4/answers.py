@@ -45,21 +45,15 @@ def part1_aac_hyperparams():
 
 
 part1_q1 = r"""
-Subtracting a baseline helps to reduce the variance of the policy-gradient since the rewards are compared to some number
-and their absolute value is not the only thing that matters. We can take two different trajectories from some batch
-where t1 has positive total reward and t2 has negative total reward. In the vanilla case without baseline t1 will get
-much higher probability then t2, but if we'll subtract a baseline the reward for t1 can be much smaller in even negative
-so in this case the gradient will be different and the difference in the probabilities of t1 and t2 will be reduced
-which will also reduce the variance
-
-Imagine that we have two different trajectories in our batch. The first has a positive total reward and the second has
-a negative one. In this case, it's easy for the PG to update the policy such that the first trajectory's actions get
-higher probability. However, if we add a constant value to our reward function, for example such that the second one
-receives zero reward, this time the gradient will be completely different since it will not reduce the probabilities for
-the sends trajectory at all.
-
-Adding a baseline fixes this dependence on absolute values of the rewards, since we'll compare all rewards to some
-constant number. In the example above, subtracting a baseline will cause the gradient to be the same in both cases.
+Subtracting a baseline helps reducing the variance of the policy gradient because it reduces the weight-term in a way
+that makes the expression lean towards the zero by making it roughly about the right scale, which results in a reduced
+variance by definition. 
+For example when there is a reward of 1,000,000 and the next moment there is a reward of 999,000, and we have to "kind 
+of" adjust in direction where we're always moving of policies parameters up but it's just the relative difference 
+that determines how much up you should make them up. It would be much convinient to have them rescaled so we will have 
+something like plus/minus one instead.
+What is amazing, is that this trick as stated doesn't effect the expected value of the pg, and results in a much
+faster convergence.
 """
 
 
