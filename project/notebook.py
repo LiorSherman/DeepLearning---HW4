@@ -17,11 +17,14 @@ import torchvision.transforms as T
 from torchvision.datasets import ImageFolder
 import IPython.display
 import tqdm
-from project.gan import save_checkpoint
+from scipy.interpolate import UnivariateSpline
+from project.ganBuildingBlocks import save_checkpoint
 import math
 from IPython.display import Image, display
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
 import matplotlib.image as mpimg
+
 
 DATA_DIR = pathlib.Path().absolute().joinpath('project/pytorch-datasets')
 DEFAULT_DATA_URL = 'http://vis-www.cs.umass.edu/lfw/lfw-a.zip'
@@ -51,7 +54,7 @@ def generateDataSet(data_url=DEFAULT_DATA_URL):
 
 def generateResults(train=False, num_epochs=10):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    ganModelNames = ['Vanila-Base-Gan', 'SN-Gan', 'W-Gan']
+    ganModelNames = ['Vanila-Base-Gan', 'SN-Gan', 'W-Gan', 'SN-W-Gan']
     resultsDirPath = 'project/final-results/'
     if train:
         trainModels(ganModelNames, num_epochs)
@@ -67,18 +70,26 @@ def generateResults(train=False, num_epochs=10):
 def plotScore(path, ganModelNames, num_epochs):
 
     x = np.arange(0, num_epochs, step)
-    # now there's 3 sets of points
-    for modelName in ganModelNames:
+    xs = np.linspace(0, x[-1] - 1, 100)
+    c = ['k', 'r', 'b', 'g']
+    legends = []
+    figure(figsize=(14, 8))
+    for idx, modelName in enumerate(ganModelNames):
         scores_file = path + modelName + '/scores.pt'
         y = torch.load(scores_file)
         y = [IS[0] for IS in y]
         x = [i*step for i in range(0,len(y))]
-        plt.plot(x, y, label=modelName)
+        xs = np.linspace(0, x[-1] - 1, 100)
+        s = UnivariateSpline(x, y, s=5)
+        ys = s(xs)
+        plt.plot(x, y, f'{c[idx]}.')
+        plt.plot(xs, ys, f'{c[idx]}--')
+        legends += [f'{modelName} scores', f'{modelName} trend curve']
     plt.title("Inception Score During Training")
-    plt.legend(ganModelNames)
+    plt.legend(legends, loc='lower right')
     plt.xlabel("Epoch")
     plt.ylabel("Inception Score ")
-    plt.grid(axis='y')
+    plt.grid(axis='both')
     plt.show()
 
 def trainModels(ganModelNames, num_epochs=10):
@@ -100,6 +111,8 @@ def trainModels(ganModelNames, num_epochs=10):
         ganModels['SN-Gan'] = SnGan(im_size, device=device)
     if 'W-Gan' in ganModelNames:
         ganModels['W-Gan'] = WGan(im_size, device=device)
+    if 'SN-W-Gan' in ganModelNames:
+        ganModels['SN-W-Gan'] = SnWGan(im_size, device=device)
     # train
     try:
         model_file_path = {}

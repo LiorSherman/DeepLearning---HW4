@@ -1,4 +1,4 @@
-from project.gan import *
+from project.ganBuildingBlocks import *
 
 
 class Gan:
@@ -94,5 +94,11 @@ class SnGan(Gan):
 class WGan(Gan):
     def __init__(self, in_size, device='cpu'):
         super().__init__(in_size, **WGanHP, device=device)
+        self.discLossFn = lambda y_data, y_generated: -torch.mean(y_data) + torch.mean(y_generated)
+        self.genLossFn = lambda y_generated: -torch.mean(y_generated)
+
+class SnWGan(Gan):
+    def __init__(self, in_size, device='cpu'):
+        super().__init__(in_size, **SNWGanHP, device=device)
         self.discLossFn = lambda y_data, y_generated: -torch.mean(y_data) + torch.mean(y_generated)
         self.genLossFn = lambda y_generated: -torch.mean(y_generated)
