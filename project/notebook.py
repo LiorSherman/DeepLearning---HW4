@@ -1,15 +1,5 @@
-import unittest
 import os
-import sys
 import pathlib
-import urllib
-import shutil
-import re
-import zipfile
-
-import numpy as np
-import torch
-import matplotlib.pyplot as plt
 from project.ganCollections import *
 import cs236781.plot as plot
 import cs236781.download
@@ -18,12 +8,10 @@ from torchvision.datasets import ImageFolder
 import IPython.display
 import tqdm
 from scipy.interpolate import UnivariateSpline
-from project.ganBuildingBlocks import save_checkpoint
-import math
 from IPython.display import Image, display
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
-import matplotlib.image as mpimg
+
 
 
 DATA_DIR = pathlib.Path().absolute().joinpath('project/pytorch-datasets')
