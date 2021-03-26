@@ -8,6 +8,7 @@ from torchvision.datasets import ImageFolder
 import IPython.display
 import tqdm
 from scipy.interpolate import UnivariateSpline
+from IPython.display import Image, display
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 
