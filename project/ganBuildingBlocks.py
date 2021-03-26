@@ -15,55 +15,6 @@ from scipy.stats import entropy
 import tqdm
 import sys
 
-class DiscriminatorX(nn.Module):
-    def __init__(self, in_size, spectral_norm_cond=False):
-        """
-        :param in_size: The size of on input image (without batch dimension).
-        """
-        super().__init__()
-        self.in_size = in_size
-        # TODO: Create the discriminator model layers.
-        #  To extract image features you can use the EncoderCNN from the VAE
-        #  section or implement something new.
-        #  You can then use either an affine layer or another conv layer to
-        #  flatten the features.
-        # ====== YOUR CODE: ======
-        def spectral_norm_if_true(x, spectral_norm_cond):
-            if spectral_norm_cond:
-                return spectral_norm(x)
-            else:
-                return x
-
-        self.encoder = nn.Sequential(
-            spectral_norm_if_true(nn.Conv2d(self.in_size[0], 128, kernel_size=4, stride=2, padding=1, bias=False), spectral_norm_cond),
-            nn.LeakyReLU(0.2),
-            spectral_norm_if_true(nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1, bias=False), spectral_norm_cond),
-            nn.BatchNorm2d(256),
-            nn.LeakyReLU(0.2),
-            spectral_norm_if_true(nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1, bias=False), spectral_norm_cond),
-            nn.BatchNorm2d(512),
-            nn.LeakyReLU(0.2),
-            spectral_norm_if_true(nn.Conv2d(512, 1024, kernel_size=4, stride=2, padding=1, bias=False), spectral_norm_cond),
-            nn.BatchNorm2d(1024),
-            nn.LeakyReLU(0.2),
-            spectral_norm_if_true(nn.Conv2d(1024, 1, kernel_size=4, stride=1, padding=0, bias=False), spectral_norm_cond),
-        )
-        # ========================
-
-    def forward(self, x):
-        """
-        :param x: Input of shape (N,C,H,W) matching the given in_size.
-        :return: Discriminator class score (not probability) of
-        shape (N,).
-        """
-        # TODO: Implement discriminator forward pass.
-        #  No need to apply sigmoid to obtain probability - we'll combine it
-        #  with the loss due to improved numerical stability.
-        # ====== YOUR CODE: ======
-        y = self.encoder(x).flatten(1)
-        # ========================
-        return y
-
 
 class Discriminator(nn.Module):
     def __init__(self, in_size, spectral_norm_cond=False):

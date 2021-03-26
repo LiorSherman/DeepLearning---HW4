@@ -2,13 +2,12 @@ from project.ganBuildingBlocks import *
 
 
 class Gan:
-    # def __init__(self, in_size, z_dim, featuremap_size=4, out_channels=3, device='cpu', spectral_norm_cond=False, with_gradient_penalty=False, **kw):
     def __init__(self, in_size,
-                 dscParams=BaselineGanHP['dscParams'],
-                 dscOptimizerParams=BaselineGanHP['optimizerParams'],
-                 genParams=BaselineGanHP['genParams'],
-                 genOptimizerParams=BaselineGanHP['optimizerParams'],
-                 trainBatchParams=BaselineGanHP['trainBatchParams'],
+                 dsc_params=BaselineGanHP['dsc_params'],
+                 dsc_optimizer_params=BaselineGanHP['optimizer_params'],
+                 gen_params=BaselineGanHP['gen_params'],
+                 gen_optimizer_params=BaselineGanHP['optimizer_params'],
+                 train_batch_params=BaselineGanHP['train_batch_params'],
                  device='cpu', **kw):
         """
         :param in_size: The size of on input image (without batch dimension).
@@ -17,13 +16,13 @@ class Gan:
         (determines output size). For example set to 4 for a 4x4 feature map.
         :out_channels: Number of channels in the generated image.
         """
-        self.discriminator = Discriminator(in_size, dscParams['spectral_norm_cond']).to(device)
-        self.generator = Generator(genParams['z_dim'], genParams['featuremap_size'], genParams['out_channels']).to(device)
-        self.discLossFn = discriminator_loss_fn
-        self.genLossFn = generator_loss_fn
-        self.dscOptimizer = create_optimizer(self.discriminator.parameters(), dscOptimizerParams)
-        self.genOptimizer = create_optimizer(self.generator.parameters(), genOptimizerParams)
-        self.with_gradient_penalty = trainBatchParams['with_gradient_penalty']
+        self.discriminator = Discriminator(in_size, dsc_params['spectral_norm_cond']).to(device)
+        self.generator = Generator(gen_params['z_dim'], gen_params['featuremap_size'], gen_params['out_channels']).to(device)
+        self.dsc_loss_fn = discriminator_loss_fn
+        self.gen_loss_fn = generator_loss_fn
+        self.dsc_opt = create_optimizer(self.discriminator.parameters(), dsc_optimizer_params)
+        self.gen_opt = create_optimizer(self.generator.parameters(), gen_optimizer_params)
+        self.with_gradient_penalty = train_batch_params['with_gradient_penalty']
 
     def discriminator(self):
         return self.discriminator
@@ -31,7 +30,7 @@ class Gan:
     def generator(self):
         return self.generator
 
-    def discForward(self, x):
+    def dsc_forward(self, x):
         """
          :param x: Input of shape (N,C,H,W) matching the given in_size.
          :return: Discriminator class score (not probability) of
@@ -39,7 +38,7 @@ class Gan:
          """
         return self.discriminator(x)
 
-    def genForward(self, z):
+    def gen_forward(self, z):
         """
         :param z: A batch of latent space samples of shape (N, latent_dim).
         :return: A batch of generated images of shape (N,C,H,W) which should be
@@ -47,7 +46,7 @@ class Gan:
         """
         return self.generator(z)
 
-    def genSample(self, n, with_grad=False):
+    def gen_sample(self, n, with_grad=False):
         """
         Samples from the Generator.
         :param n: Number of instance-space samples to generate.
@@ -56,38 +55,36 @@ class Gan:
         be able to backprop into them and compute their gradients).
         :return: A batch of samples, shape (N,C,H,W).
         """
-        return self.genSample(n, with_grad)
+        return self.gen_sample(n, with_grad)
 
-    def discLossFn(self, y_data, y_generated, dscLossParams=BaselineGanHP['dscLossParams']):
-        return self.discLossFn(y_data, y_generated, dscLossParams)
+    def disc_loss_fn(self, y_data, y_generated, dscLossParams=BaselineGanHP['dscLossParams']):
+        return self.dsc_loss_fn(y_data, y_generated, dscLossParams)
 
-    def genLossFn(self, y_generated, genLossParams=BaselineGanHP['genLossParams']):
-        return self.genLossFn(y_generated, genLossParams)
+    def gen_loss_fn(self, y_generated, genLossParams=BaselineGanHP['genLossParams']):
+        return self.gen_loss_fn(y_generated, genLossParams)
 
-    def trainBatch(self, x_data: DataLoader):
-        self.dscOptimizer.zero_grad()
-        generatedData = self.generator.sample(x_data.shape[0])
-        realDataProb = self.discriminator(x_data)
-        genDataProb = self.discriminator(generatedData)
-        gradPenalty = gradient_penalty(x_data, generatedData, self.discriminator) if self.with_gradient_penalty else 0.
-        dscLoss = self.discLossFn(realDataProb, genDataProb) + gradPenalty
-        dscLoss.backward()
-        self.dscOptimizer.step()
+    def train_batch(self, x_data: DataLoader):
+        self.dsc_opt.zero_grad()
+        generated_data = self.generator.sample(x_data.shape[0])
+        real_data_prob = self.discriminator(x_data)
+        gen_data_prob = self.discriminator(generated_data)
+        grad_penalty = gradient_penalty(x_data, generated_data, self.discriminator) if self.with_gradient_penalty else 0.
+        dsc_loss = self.dsc_loss_fn(real_data_prob, gen_data_prob) + grad_penalty
+        dsc_loss.backward()
+        self.dsc_opt.step()
 
-        self.genOptimizer.zero_grad()
-        generatedData = self.generator.sample(x_data.shape[0], with_grad=True)
-        genDataProb = self.discriminator(generatedData)
-        genLoss = self.genLossFn(genDataProb)
-        genLoss.backward()
-        self.genOptimizer.step()
+        self.gen_opt.zero_grad()
+        generated_data = self.generator.sample(x_data.shape[0], with_grad=True)
+        gen_data_prob = self.discriminator(generated_data)
+        gen_loss = self.gen_loss_fn(gen_data_prob)
+        gen_loss.backward()
+        self.gen_opt.step()
 
-        return dscLoss.item(), genLoss.item()
+        return dsc_loss.item(), gen_loss.item()
 
 
 class SnGan(Gan):
     def __init__(self, in_size, device='cpu'):
-        # super().__init__(in_size, z_dim, featuremap_size=featuremap_size, out_channels=out_channels, device=device,
-        #                  spectral_norm_cond=True, kw=SNParams)
         super().__init__(in_size, **SNGanHP, device=device)
 
 
