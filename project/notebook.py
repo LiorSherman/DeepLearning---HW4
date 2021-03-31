@@ -20,7 +20,7 @@ DEFAULT_DATA_URL = 'http://vis-www.cs.umass.edu/lfw/lfw-a.zip'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 image_size = 64
-step = 10
+step = 5
 
 def generate_data_set(data_url=DEFAULT_DATA_URL):
     _, dataset_dir = cs236781.download.download_data(out_path=DATA_DIR, url=data_url, extract=True, force=False)
@@ -59,6 +59,24 @@ def plot_score(path, ganModelNames, num_epochs):
     c = ['k', 'r', 'b', 'g']
     legends = []
     figure(figsize=(14, 8))
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+    # for i, mean_std in enumerate(('Inception Score - Mean', 'Inception Score - Std')):
+    #     for idx, modelName in enumerate(ganModelNames):
+    #         scores_file = path + modelName + '/scores.pt'
+    #         y = torch.load(scores_file)
+    #         y = [IS[i] for IS in y]
+    #         x = [item * step for item in range(0, len(y))]
+    #         xs = np.linspace(0, x[-1] - 1, 100)
+    #         s = UnivariateSpline(x, y, s=5)
+    #         ys = s(xs)
+    #         axes[i].plot(x, y, f'{c[idx]}.')
+    #         axes[i].plot(xs, ys, f'{c[idx]}--')
+    #         legends += [f'{modelName}', f'{modelName} trend curve']
+    #     axes[i].set_title(mean_std.capitalize(), fontweight='bold')
+    #     axes[i].set_xlabel('Epoch')
+    #     axes[i].legend(legends[:len(ganModelNames)])
+    #     axes[i].grid(which='both', axis='y')
+
     for idx, modelName in enumerate(ganModelNames):
         scores_file = path + modelName + '/scores.pt'
         y = torch.load(scores_file)
@@ -69,7 +87,7 @@ def plot_score(path, ganModelNames, num_epochs):
         ys = s(xs)
         plt.plot(x, y, f'{c[idx]}.')
         plt.plot(xs, ys, f'{c[idx]}--')
-        legends += [f'{modelName} scores', f'{modelName} trend curve']
+        legends += [f'{modelName}', f'{modelName} trend curve']
     plt.title("Inception Score During Training")
     plt.legend(legends, loc='lower right')
     plt.xlabel("Epoch")
@@ -112,7 +130,7 @@ def train_models(gan_model_names, num_epochs=10):
             dsc_avg_losses[gan_name] = []
             gen_avg_losses[gan_name] = []
             scores[gan_name] = []
-
+        # best_score = {gan_name: 0 for gan_name, gan_module in gan_models.items()}
         for epoch_idx in range(num_epochs):
             # We'll accumulate batch losses and show an average once per epoch.
             dsc_losses, gen_losses = {}, {}
@@ -142,24 +160,34 @@ def train_models(gan_model_names, num_epochs=10):
                 if epoch_idx % step == 0:
                     print(f'========{gan_name}========')
                     gen = gan_module.generator
+                    torch.save(gen, model_file_path[gan_name].joinpath('gen.pt'))
                     samples = gen.sample(5, with_grad=False)
                     fig, _ = plot.tensors_as_images(samples.cpu(), figsize=(6, 2))
                     # torch.save(fig, model_file_path[gan_name].joinpath('fig.pt'))
                     IPython.display.display(fig)
                     plt.close(fig)
-                    print(f'========================')
+
                     scores[gan_name] += [inception_score(gen, cuda=True, batch_size=32, resize=True, splits=10, len=20000)]
                     torch.save(scores[gan_name], model_file_path[gan_name].joinpath('scores.pt'))
                     print(f'Inception score for {gan_name} is: mean: {scores[gan_name][-1][0]} std: {scores[gan_name][-1][1]}' )
-
+                    # if scores[gan_name][-1][0] > best_score[gan_name]:
+                    #     best_score[gan_name] = scores[gan_name][-1][0]
+                    #     best_model = (gen, epoch_idx, best_score[gan_name])
+                    #     #torch.save(best_model, model_file_path[gan_name].joinpath('best_gans.pt'))
+                    print(f'========================')
 
         gan_models = {gan_name: gan_module.generator for gan_name, gan_module in gan_models.items()}
     except KeyboardInterrupt as e:
+        for gan_name, gen in gan_models.items():
+            samples = gen.sample(50, with_grad=False)
+            torch.save(samples, model_file_path[gan_name].joinpath('generated_samples.pt'))
+            torch.save(gen, model_file_path[gan_name].joinpath('gen.pt'))
         print('\n *** Training interrupted by user')
 
     for gan_name, gen in gan_models.items():
         samples = gen.sample(50, with_grad=False)
         torch.save(samples, model_file_path[gan_name].joinpath('generated_samples.pt'))
+        #torch.save(gen, model_file_path[gan_name].joinpath('gen.pt'))
     print('Training Complete')
 
 
@@ -169,7 +197,17 @@ def generate_results_from_path(modelName, modelPath):
     print(f'Model Type: {modelName}')
     print(f'Generated Images: ')
     samples = torch.load(f'{modelPath}/generated_samples.pt')
-    fig, _ = plot.tensors_as_images(samples.cpu(), figsize=(15,10), nrows=5)
+    fig, _ = plot.tensors_as_images(samples.cpu(), figsize=(15, 10), nrows=5)
     IPython.display.display(fig)
     plt.close(fig)
+    #print_best_model(modelName,modelPath)
     print('=====================================')
+
+# def print_best_model(modelName, modelPath):
+#     best_model = torch.load(f'{modelPath}/best_gans.pt')
+#     gen, epoch, score = best_model
+#     print(f'Best model {modelName} in epoch: {epoch} with inception score {score} ')
+#     samples = gen.sample(50, with_grad=False)
+#     fig, _ = plot.tensors_as_images(samples.cpu(), figsize=(15, 10), nrows=5)
+#     IPython.display.display(fig)
+#     plt.close(fig)

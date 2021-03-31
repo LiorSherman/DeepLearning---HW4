@@ -57,11 +57,11 @@ class Gan:
         """
         return self.gen_sample(n, with_grad)
 
-    def disc_loss_fn(self, y_data, y_generated, dscLossParams=BaselineGanHP['dscLossParams']):
-        return self.dsc_loss_fn(y_data, y_generated, dscLossParams)
+    def disc_loss_fn(self, y_data, y_generated, dsc_loss_params=BaselineGanHP['dsc_loss_params']):
+        return self.dsc_loss_fn(y_data, y_generated, dsc_loss_params)
 
-    def gen_loss_fn(self, y_generated, genLossParams=BaselineGanHP['genLossParams']):
-        return self.gen_loss_fn(y_generated, genLossParams)
+    def gen_loss_fn(self, y_generated, gen_loss_params=BaselineGanHP['gen_loss_params']):
+        return self.gen_loss_fn(y_generated, gen_loss_params)
 
     def train_batch(self, x_data: DataLoader):
         self.dsc_opt.zero_grad()
